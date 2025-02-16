@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">
@@ -96,3 +97,6 @@ Get Specific Revision:
 GET /api/article/{article_id}/revisions/{revision_id}
 Revert to a Revision:
 POST /api/article/{article_id}/revisions/{revision_id}/revert
+=======
+# fulltek
+>>>>>>> f0c5f36543d1e92ad03cc52dccde793b7346dc2a
