@@ -26,9 +26,10 @@ class ArticleController extends Controller
         $this->user = $user;
     }
 
-    public function index(IndexRequest $request): ArticleCollection
+    public function index()
     {
-        return new ArticleCollection($this->article->getFiltered($request->validated()));
+        $articles = Article::all();
+        return view('articles.index', compact('articles'));
     }
 
     public function feed(FeedRequest $request): ArticleCollection
@@ -41,23 +42,40 @@ class ArticleController extends Controller
         return $this->articleResponse($article);
     }
 
+    public function showBlade(Article $article)
+    {
+        $article->load('revisions', 'user');
+        return view('articles.show', compact('article'));
+    }
+
     public function store(StoreRequest $request): ArticleResource
     {
-        $article = auth()->user()->articles()->create($request->validated()['article']);
-
-        $this->syncTags($article);
-
+        $user = auth()->user();
+        if (!$user) {
+            abort(401, 'Unauthorized');
+        }
+        $article = optional($user)->articles()->create($request->validated()['article']);
+        $tagList = $request->validated()['article']['tagList'] ?? [];
+        $this->syncTags($article, $tagList);
         return $this->articleResponse($article);
     }
 
-    public function update(Article $article, UpdateRequest $request): ArticleResource
+    public function edit(Article $article)
     {
-        $article->update($request->validated()['article']);
-
-        $this->syncTags($article);
-
-        return $this->articleResponse($article);
+        return view('articles.edit', compact('article'));
     }
+
+    public function update(Article $article, UpdateRequest $request)
+{
+    $data = $request->validated();
+    $article->update($data);
+    $tagList = $data['tagList'] ?? [];
+    $this->syncTags($article, $tagList);
+
+    return redirect()->route('articles.index')
+        ->with('success', 'Article updated successfully and revision saved.');
+}
+
 
     public function destroy(Article $article, DestroyRequest $request): void
     {
@@ -78,9 +96,9 @@ class ArticleController extends Controller
         return $this->articleResponse($article);
     }
 
-    protected function syncTags(Article $article): void
+    protected function syncTags(Article $article, array $tagList): void
     {
-        $this->articleService->syncTags($article, $this->request->validated()['article']['tagList'] ?? []);
+        $this->articleService->syncTags($article, $tagList);
     }
 
     protected function articleResponse(Article $article): ArticleResource

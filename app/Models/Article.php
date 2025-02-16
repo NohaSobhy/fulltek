@@ -18,9 +18,23 @@ class Article extends Model
 
     public function getRouteKeyName(): string
     {
-        return 'slug';
+        return 'id';
     }
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::updating(function ($article) {
+            ArticleRevision::create([
+                'article_id'  => $article->id,
+                'title'       => $article->getOriginal('title'),
+                'description' => $article->getOriginal('description'),
+                'body'        => $article->getOriginal('body'),
+            ]);
+        });
+    }
+    
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

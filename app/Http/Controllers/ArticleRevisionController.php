@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Article;
@@ -12,20 +13,28 @@ class ArticleRevisionController extends Controller
     public function index(Article $article)
     {
         $revisions = $article->revisions;
-        return view('articles.revisions', compact('article', 'revisions'));
-
+        return view('articles.revisions.index', compact('article', 'revisions'));
     }
 
     public function show(Article $article, ArticleRevision $revision)
     {
-        return view('articles.revision_detail', compact('article', 'revision'));
+        return view('articles.revisions.show', compact('article', 'revision'));
     }
 
-    public function update(UpdateRevisionRequest $request, Article $article, ArticleRevision $revision)
+    public function revert(Request $request, Article $article, ArticleRevision $revision)
     {
-        $request->updateRevision($revision);
-        return redirect()->route('revisions.index', $article->id)->with('success', 'Article reverted successfully!');
+        if (auth()->id() !== $article->user->id) {
+            return redirect()->route('articles.show', $article)
+                ->with('error', 'Unauthorized action.');
+        }
+
+        $article->update([
+            'title'       => $revision->title,
+            'description' => $revision->description,
+            'body'        => $revision->body,
+        ]);
+
+        return redirect()->route('articles.show', $article)
+            ->with('success', 'Article reverted successfully.');
     }
-
-
 }
